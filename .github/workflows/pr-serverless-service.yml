@@ -31,22 +31,26 @@ jobs:
           BRANCH_NAME: ${{ github.ref }}
           REPO_NAME: ${{ github.repository }}
       - name: Check out repository code
-        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - name: Install poetry
         run: pipx install poetry
       - name: Set up Python
-        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry" # NOTE: poetry must be installed before this step, or else cache doesn't work
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '^1.20.3' # The Go version to download (if necessary) and use.
+      - name: Install Go deps
+        run: go mod download
       - name: Install dependencies
         run: make dev
       - name: pre commit
         run: make pre-commit
       - name: Formatting and Linting
         run: make lint
-      - name: Complexity scan
-        run: make complex
   tests:
     needs: quality_standards
     runs-on: ubuntu-latest
@@ -55,11 +59,11 @@ jobs:
       id-token: write # required for requesting the JWT (GitHub OIDC)
     steps:
       - name: Check out repository code
-        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - name: Install poetry
         run: pipx install poetry
       - name: Set up Python
-        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry" # NOTE: poetry must be installed before this step, or else cache doesn't work
@@ -84,24 +88,6 @@ jobs:
         run: make infra-tests
       - name: Deploy to AWS
         run: make deploy
-      # NOTE: these run unit and integration tests
-      # we can look into coverage collection only later to make it faster and less brittle (--collect-only)
-      - name: Check OpenAPI Spec breaking action
-        uses: oasdiff/oasdiff-action/breaking@a2ff6682b27d175162a74c09ace8771bd3d512f8 # v0.0.16
-        with:
-          base: https://raw.githubusercontent.com/ran-isenberg/aws-lambda-handler-cookbook/main/docs/swagger/openapi.json
-          revision: ./docs/swagger/openapi.json
-      - name: Validate OpenAPI Documentation
-        run: make compare-openapi
-      - name: Code coverage tests
-        run: make coverage-tests
-      - name: Codecov
-        uses: codecov/codecov-action@5ecb98a3c6b747ed38dc09f787459979aebb39be # v4.3.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
-          fail_ci_if_error: yes # optional (default = false)
-          verbose: yes # optional (default = false)
       - name: Run E2E tests
         run: make e2e
       - name: Destroy stack

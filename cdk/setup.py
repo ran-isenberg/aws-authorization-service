@@ -6,9 +6,9 @@ from setuptools import find_packages, setup
 here = path.abspath(path.dirname(__file__))
 
 setup(
-    name='service-cdk',
-    version='3.1',
-    description='CDK code for deploying an AWS Lambda handler that implements the best practices described at https://www.ranthebuilder.cloud',
+    name='authorization-cdk',
+    version='1.0',
+    description='CDK code for deploying the serverless service',
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
